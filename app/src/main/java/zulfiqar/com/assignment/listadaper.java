@@ -11,6 +11,14 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
+
 import java.util.List;
 
 public class listadaper extends RecyclerView.Adapter<listadaper.ViewHolder>{
@@ -34,7 +42,9 @@ public class listadaper extends RecyclerView.Adapter<listadaper.ViewHolder>{
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
+    public void onBindViewHolder(final ViewHolder holder, final int position) {
+
+        final int pos  = position;
         final listdata myListData = listdata.get(position);
         holder.textView1.setText(listdata.get(position).getName());
         holder.textView2.setText(listdata.get(position).getAge());
@@ -43,6 +53,41 @@ public class listadaper extends RecyclerView.Adapter<listadaper.ViewHolder>{
             @Override
             public void onClick(View view) {
                 Toast.makeText(view.getContext(),"click on item: "+myListData.getName(),Toast.LENGTH_LONG).show();
+            }
+        });
+
+        holder.textView1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                DatabaseReference reference = FirebaseDatabase.getInstance().getReference();
+                Query Uri = reference.child("users").orderByChild("name").equalTo(listdata.get(pos).getName());
+
+                Uri.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+
+                        for(DataSnapshot uri : dataSnapshot.getChildren() )
+                        {
+
+                            uri.getRef().removeValue().addOnSuccessListener(new OnSuccessListener<Void>() {
+                                @Override
+                                public void onSuccess(Void aVoid) {
+
+                                    Toast.makeText(context,"deleted the database",Toast.LENGTH_SHORT).show();
+                                    
+                                }
+                            });
+
+                        }
+
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
+
             }
         });
     }
